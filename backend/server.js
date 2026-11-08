@@ -30,7 +30,10 @@ connectDB();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://smart-civic-frontend-vert.vercel.app"
+  "https://smart-civic-frontend-vert.vercel.app",
+   // Capacitor Android app
+  "https://localhost",
+  "capacitor://localhost"
 ];
 console.log("Allowed frontend origins:", allowedOrigins);
 app.use(cors({
