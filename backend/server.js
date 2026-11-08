@@ -27,29 +27,23 @@ connectDB();
 /* =========================
    CORS CONFIGURATION
 ========================= */
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.CLIENT_URL
-].filter(Boolean);
+  "https://smart-civic-frontend-vert.vercel.app"
+];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests without an Origin header
-      // and requests from approved frontend URLs.
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
       console.error("Blocked by CORS:", origin);
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true
-  })
-);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
 
 /* =========================
    BODY PARSING
