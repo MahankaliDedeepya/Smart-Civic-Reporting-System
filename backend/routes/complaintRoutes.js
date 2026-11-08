@@ -1,18 +1,12 @@
-const express =
-  require("express");
 
-const multer =
-  require("multer");
-
-const path =
-  require("path");
+const express = require("express");
+const multer = require("multer");
 
 const {
   protect,
   adminOnly,
   staffOrAdmin
-} =
-  require("../middleware/authMiddleware");
+} = require("../middleware/authMiddleware");
 
 const {
   createComplaint,
@@ -20,49 +14,53 @@ const {
   getComplaintById,
   updateStatus,
   deleteComplaint
-} =
-  require("../controllers/complaintController");
+} = require("../controllers/complaintController");
 
-const router =
-  express.Router();
+const router = express.Router();
 
-const storage =
-  multer.diskStorage({
+/* =========================
+   MULTER MEMORY STORAGE
+========================= */
 
-    destination:
-      (req, file, cb) => {
+const storage = multer.memoryStorage();
 
-        cb(
-          null,
-          "uploads/"
-        );
-      },
+/* =========================
+   IMAGE VALIDATION
+========================= */
 
-    filename:
-      (req, file, cb) => {
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
 
-        const uniqueName =
-          Date.now() +
-          "-" +
-          Math.round(
-            Math.random() * 1E9
-          ) +
-          path.extname(
-            file.originalname
-          );
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error("Only JPG, PNG and WebP images are allowed")
+    );
+  }
+};
 
-        cb(
-          null,
-          uniqueName
-        );
-      }
-  });
+/* =========================
+   MULTER CONFIGURATION
+========================= */
 
-const upload =
-  multer({
-    storage
-  });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  },
+  fileFilter
+});
 
+/* =========================
+   COMPLAINT ROUTES
+========================= */
+
+// Create complaint with image upload
 router.post(
   "/",
   protect,
@@ -70,18 +68,21 @@ router.post(
   createComplaint
 );
 
+// Get complaints submitted by logged-in citizen
 router.get(
   "/my",
   protect,
   getMyComplaints
 );
 
+// Get complaint by ID
 router.get(
   "/:id",
   protect,
   getComplaintById
 );
 
+// Update complaint status
 router.put(
   "/:id/status",
   protect,
@@ -89,10 +90,40 @@ router.put(
   updateStatus
 );
 
+// Delete complaint
 router.delete(
   "/:id",
   protect,
   deleteComplaint
 );
+
+/* =========================
+   MULTER ERROR HANDLER
+========================= */
+
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        message: "Image size must not exceed 5 MB"
+      });
+    }
+
+    return res.status(400).json({
+      message: err.message
+    });
+  }
+
+  if (
+    err.message ===
+    "Only JPG, PNG and WebP images are allowed"
+  ) {
+    return res.status(400).json({
+      message: err.message
+    });
+  }
+
+  next(err);
+});
 
 module.exports = router;

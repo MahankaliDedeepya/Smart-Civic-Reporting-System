@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const historySchema = new mongoose.Schema(
@@ -41,7 +42,14 @@ const complaintSchema = new mongoose.Schema(
       required: true
     },
 
+    // Cloudinary image URL
     image: {
+      type: String,
+      default: ""
+    },
+
+    // Cloudinary public ID, used when deleting an image
+    cloudinaryPublicId: {
       type: String,
       default: ""
     },
